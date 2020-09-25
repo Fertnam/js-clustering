@@ -1,0 +1,8 @@
+.graphic {
+	height: 600px;
+}
+
+.graphic__canvas {
+	width: auto !important;
+	height: 100% !important;
+}
