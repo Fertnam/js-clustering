@@ -2,7 +2,7 @@ window.addEventListener('load', () => {
 	let form = document.querySelector('.form');
 	let pointsInput = document.querySelector('.form__points-input');
 
-	let chart = null;
+	let chart = {};
 
 	const CLUSTERS_COUNT = 3;
 	const COLORS = ['red', 'blue', 'yellow'];
@@ -165,7 +165,7 @@ window.addEventListener('load', () => {
 	function updateChart(datasets) {
 		let canvas = document.querySelector('.graphic__canvas');
 
-		if (chart !== null) {
+		if (Object.keys(chart).length !== 0) {
 			chart.destroy();
 		}
 
