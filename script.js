@@ -12,39 +12,84 @@ window.addEventListener('load', () => {
 		event.preventDefault();
 
 		let points = fillPoints(pointsInput.value);
+
 		let clusters = [];
+		let newClusters = [];
 
-		while (true) {
-			let massCenters = fillMassCenters(points);
-			let massCentersDistance = fillMassCentersDistance(massCenters, points);
+		let massCenters = [];
+		let massCentersDistance = [];
 
-			clusters = fillClusters(massCentersDistance, points);
-			let clusterMassCenters = fillClusterMassCenters(clusters);
+		let iterationsCount = 0;
 
-			let newMassCentersDistance = fillMassCentersDistance(clusterMassCenters, clusters.flat());
-			let newClusters = fillClusters(newMassCentersDistance, clusters.flat());
+		while(true) {
+			if (iterationsCount === 0) {
+				massCenters = fillMassCenters(points);
+				massCentersDistance = fillMassCentersDistance(massCenters, points);
+			}
 
-			if (JSON.stringify(clusters) === JSON.stringify(newClusters)) {
+			if (newClusters.length !== 0) {
+				clusters = newClusters
+			} else {
+				clusters = fillClusters(massCentersDistance, points);
+			}
+
+			massCenters = fillClusterMassCenters(clusters);
+
+			massCentersDistance = fillMassCentersDistance(massCenters, clusters.flat());
+			newClusters = fillClusters(massCentersDistance, clusters.flat());
+
+			if (compareArrays(clusters, newClusters)) {
+				iterationsCount++;
 				break;
 			}
+
+			iterationsCount++;
 		}
 
-		let datasets = [];
+		renderChart(fillDatasets(newClusters))
+
+		alert(`Выполнено за ${iterationsCount} итераций`);
+	});
+
+	//Заполнить наборы данных для графика
+	function fillDatasets(clusters) {
+		let result = [];
 
 		clusters.forEach((cluster, index) => {
-			datasets.push({
+			result.push({
 				label: 'Кластер #' + (index + 1),
 				data: [],
 				backgroundColor: COLORS[index]
 			});
 
 			cluster.forEach((point) => {
-				datasets[index].data.push({ x: point.x, y: point.y, r: 8 })
+				result[index].data.push({ x: point.x, y: point.y, r: 8 })
 			});
 		});
 
-		updateChart(datasets);
-	});
+		return result;
+	}
+
+	//Сравнить массивы
+	function compareArrays(firstArray, secondArray) {
+		let result = true;
+
+		loop:
+			for (let clusterIndex = 0; clusterIndex < firstArray.length; clusterIndex++) {
+				for (let pointIndex = 0; pointIndex < firstArray[clusterIndex].length; pointIndex++) {
+					if (
+						firstArray[clusterIndex][pointIndex].x !== secondArray[clusterIndex][pointIndex].x
+						||
+						firstArray[clusterIndex][pointIndex].y !== secondArray[clusterIndex][pointIndex].y
+					) {
+						result = false;
+						break loop;
+					}
+				}
+			}
+
+		return result;
+	}
 
 	//Сгенерировать точки
 	function fillPoints(count) {
@@ -161,8 +206,8 @@ window.addEventListener('load', () => {
 		return result;
 	}
 
-	//Обновить график
-	function updateChart(datasets) {
+	//Сгенерировать график
+	function renderChart(datasets) {
 		let canvas = document.querySelector('.graphic__canvas');
 
 		if (Object.keys(chart).length !== 0) {
@@ -173,6 +218,9 @@ window.addEventListener('load', () => {
 			type: 'bubble',
 			data: {
 				datasets: datasets
+			},
+			options: {
+				events: [ 'click' ]
 			}
 		});
 	}
